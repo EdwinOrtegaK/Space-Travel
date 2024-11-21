@@ -29,7 +29,9 @@ impl Fragment {
 fn solar_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
-    let time_factor = (uniforms.time as f32 * 0.05).sin() * 0.4 + 0.8;
+
+    let slowed_time = uniforms.time as f32 / 3.0;
+    let time_factor = (slowed_time * 0.05).sin() * 0.4 + 0.8;
 
     let zoom = 15.0;
     let noise_value = uniforms.noise_open_simplex.get_noise_2d(x * zoom, y * zoom) * 0.3 + 0.7;
@@ -81,7 +83,7 @@ fn gas_giant_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let zoom = 3.0;
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
-    let time = uniforms.time as f32 * 0.05;
+    let time = uniforms.time as f32 * 0.04;
 
     // Crear un patrón basado en ondas para un efecto gaseoso dinámico
     let pattern1 = ((x * zoom + time).sin() * (y * zoom + time).cos()).abs();
@@ -107,7 +109,7 @@ fn gas_giant_with_rings_shader(fragment: &Fragment, uniforms: &Uniforms) -> Colo
     let zoom = 4.0;
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
-    let time = uniforms.time as f32 * 0.03;
+    let time = uniforms.time as f32 * 0.01;
 
     // Crear un patrón gaseoso con bandas horizontales
     let pattern1 = ((x * zoom).sin() * (y * zoom * 0.5 + time).cos()).abs();
@@ -168,7 +170,7 @@ pub fn planet_colorful(fragment: &Fragment, uniforms: &Uniforms) -> Color {
 
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
-    let tiempo = (uniforms.time as f32) * 0.03;
+    let tiempo = (uniforms.time as f32) * 0.006;
 
     // Frecuencia y ruido para patrones
     let frecuencia = 6.0;
