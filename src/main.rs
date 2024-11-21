@@ -1,4 +1,4 @@
-use nalgebra_glm::{Vec2, Vec3, Mat4};
+use nalgebra_glm::{Vec2, Vec3, Vec4, Mat4};
 use minifb::{Key, Window, WindowOptions};
 use std::time::Duration;
 
@@ -22,6 +22,7 @@ use fastnoise_lite::{FastNoiseLite, NoiseType, CellularDistanceFunction};
 use crate::fragment::{fragment_shader, Fragment, ring_shader};
 use crate::color::Color;
 use crate::camera::Camera;
+use crate::line::draw_circle;
 
 pub struct Uniforms {
     model_matrix: Mat4,
@@ -283,7 +284,7 @@ fn main() {
             "solar_surface",
         );
 
-        // Renderizar planetas
+        // Renderizar proyecto
         for planet in &planets {
             let angle = time as f32 * planet.orbit_speed;
 
@@ -305,6 +306,22 @@ fn main() {
             planet_uniforms.view_matrix = view_matrix;
             planet_uniforms.time = time;
 
+            // Renderizar órbita
+            const ORBIT_COLOR: Color = Color::new(200, 200, 200);
+
+            draw_circle(
+                &mut framebuffer,
+                Vec3::new(
+                    (window_width as f32 / 2.0),
+                    (window_height as f32 / 2.0),
+                    0.0,
+                ),
+                planet.orbit_radius,
+                ORBIT_COLOR,
+                view_matrix,
+            );
+
+            // Renderizar planeta
             render(
                 &mut framebuffer,
                 &planet_uniforms,

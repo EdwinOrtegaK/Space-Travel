@@ -1,7 +1,8 @@
 use crate::fragment::Fragment;
 use crate::vertex::Vertex;
 use crate::color::Color;
-use nalgebra_glm::{Vec2, Vec3};
+use crate::framebuffer::Framebuffer;
+use nalgebra_glm::{Vec2, Vec3, Vec4, Mat4};
 
 pub fn line(a: &Vertex, b: &Vertex) -> Vec<Fragment> {
     let mut fragments = Vec::new();
@@ -52,3 +53,31 @@ pub fn line(a: &Vertex, b: &Vertex) -> Vec<Fragment> {
 
     fragments
 }
+
+pub fn draw_circle(
+    framebuffer: &mut Framebuffer,
+    orbit_center: Vec3,
+    orbit_radius: f32,
+    orbit_color: Color,
+    view_matrix: Mat4,
+) {
+    for angle in (0..360).step_by(1) {
+        let radians = (angle as f32).to_radians();
+
+        let local_x = orbit_center.x + orbit_radius * radians.cos();
+        let local_y = orbit_center.y + orbit_radius * radians.sin();
+        let local_z = orbit_center.z;
+
+        let transformed_point = view_matrix * Vec4::new(local_x, local_y, local_z, 1.0);
+
+        let screen_x = (transformed_point.x / transformed_point.w) as usize;
+        let screen_y = (transformed_point.y / transformed_point.w) as usize;
+
+        if screen_x < framebuffer.width && screen_y < framebuffer.height {
+            framebuffer.set_current_color(orbit_color.to_hex());
+            framebuffer.point(screen_x, screen_y, local_z);
+        }
+    }
+}
+
+
