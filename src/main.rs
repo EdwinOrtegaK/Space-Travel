@@ -111,56 +111,56 @@ fn define_planets() -> Vec<Planet> {
             name: "ROCKY_PLANET",
             scale: 5.4,
             orbit_radius: 100.0,
-            orbit_speed: 1.6,
-            rotation_speed: 1.0,
+            orbit_speed: 0.02,
+            rotation_speed: 0.01,
             shader: "rocky_planet_shader",
         },
         Planet {
             name: "PLANET_COLORFUL",
             scale: 6.8,
             orbit_radius: 180.0,
-            orbit_speed: 1.2,
-            rotation_speed: 0.5,
+            orbit_speed: 0.015,
+            rotation_speed: 0.008,
             shader: "colorful",
         },
         Planet {
             name: "ROCKY_PLANET_WITH_MOON",
             scale: 6.0,
             orbit_radius: 260.0,
-            orbit_speed: 0.8,
-            rotation_speed: 0.09,
+            orbit_speed: 0.01,
+            rotation_speed: 0.006,
             shader: "rocky_planet_with_moon_shader",
         },
         Planet {
             name: "DARK_RED",
             scale: 7.4,
             orbit_radius: 340.0,
-            orbit_speed: 0.01,
-            rotation_speed: 0.5,
+            orbit_speed: 0.005,
+            rotation_speed: 0.004,
             shader: "dark_red",
         },
         Planet {
             name: "GAS_GIANT",
             scale: 12.0,
             orbit_radius: 440.0,
-            orbit_speed: 0.015,
-            rotation_speed: 0.09,
+            orbit_speed: 0.002,
+            rotation_speed: 0.0008,
             shader: "gas_giant_shader",
         },
         Planet {
             name: "PLANET_EXOTIC",
             scale: 8.0,
             orbit_radius: 530.0,
-            orbit_speed: 0.015,
-            rotation_speed: 0.09,
+            orbit_speed: 0.003,
+            rotation_speed: 0.002,
             shader: "exotic",
         },
         Planet {
             name: "GAS_GIANT_WITH_RINGS",
             scale: 9.4,
             orbit_radius: 650.0,
-            orbit_speed: 0.015,
-            rotation_speed: 0.09,
+            orbit_speed: 0.001,
+            rotation_speed: 0.0008,
             shader: "gas_giant_with_rings",
         }
     ]
@@ -340,7 +340,7 @@ fn main() {
             if planet.name == "ROCKY_PLANET_WITH_MOON" {
                 let moon_orbit_radius = 30.0;
                 let moon_scale = planet.scale * 0.8;
-                let moon_orbit_speed = 2.0;
+                let moon_orbit_speed = 0.01;
                 let moon_angle = time as f32 * moon_orbit_speed;
 
                 let moon_translation = Vec3::new(
@@ -350,7 +350,8 @@ fn main() {
                 );
 
                 // Rotación de la luna
-                let moon_rotation = Vec3::new(0.0, time as f32 * 0.2, 0.0);
+                let moon_rotation_speed = planet.rotation_speed * 0.3;
+                let moon_rotation = Vec3::new(0.0, time as f32 * moon_rotation_speed, 0.0);
 
                 let moon_model_matrix = create_model_matrix(
                     moon_translation,
