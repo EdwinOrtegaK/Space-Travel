@@ -110,7 +110,7 @@ fn define_planets() -> Vec<Planet> {
         Planet {
             name: "ROCKY_PLANET",
             scale: 5.4,
-            orbit_radius: 80.0,
+            orbit_radius: 100.0,
             orbit_speed: 1.6,
             rotation_speed: 1.0,
             shader: "rocky_planet_shader",
@@ -118,7 +118,7 @@ fn define_planets() -> Vec<Planet> {
         Planet {
             name: "PLANET_COLORFUL",
             scale: 6.8,
-            orbit_radius: 160.0,
+            orbit_radius: 180.0,
             orbit_speed: 1.2,
             rotation_speed: 0.5,
             shader: "colorful",
@@ -126,7 +126,7 @@ fn define_planets() -> Vec<Planet> {
         Planet {
             name: "ROCKY_PLANET_WITH_MOON",
             scale: 6.0,
-            orbit_radius: 240.0,
+            orbit_radius: 260.0,
             orbit_speed: 0.8,
             rotation_speed: 0.09,
             shader: "rocky_planet_with_moon_shader",
@@ -134,7 +134,7 @@ fn define_planets() -> Vec<Planet> {
         Planet {
             name: "DARK_RED",
             scale: 7.4,
-            orbit_radius: 320.0,
+            orbit_radius: 340.0,
             orbit_speed: 0.01,
             rotation_speed: 0.5,
             shader: "dark_red",
@@ -142,7 +142,7 @@ fn define_planets() -> Vec<Planet> {
         Planet {
             name: "GAS_GIANT",
             scale: 12.0,
-            orbit_radius: 420.0,
+            orbit_radius: 440.0,
             orbit_speed: 0.015,
             rotation_speed: 0.09,
             shader: "gas_giant_shader",
@@ -150,15 +150,15 @@ fn define_planets() -> Vec<Planet> {
         Planet {
             name: "PLANET_EXOTIC",
             scale: 8.0,
-            orbit_radius: 510.0,
+            orbit_radius: 530.0,
             orbit_speed: 0.015,
             rotation_speed: 0.09,
             shader: "exotic",
         },
         Planet {
             name: "GAS_GIANT_WITH_RINGS",
-            scale: 8.5,
-            orbit_radius: 620.0,
+            scale: 9.4,
+            orbit_radius: 650.0,
             orbit_speed: 0.015,
             rotation_speed: 0.09,
             shader: "gas_giant_with_rings",
@@ -253,12 +253,13 @@ fn main() {
 
     let mut moon = Moon {
         position: Vec3::new(0.0, 0.0, 0.0),
-        scale: 30.0,
+        scale: 8.0,
         rotation: Vec3::new(0.0, 0.0, 0.0),
     };
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         handle_camera_input(&mut camera, &window);
+        time += 1;
 
         let view_matrix = camera.view_matrix();
 
@@ -266,13 +267,14 @@ fn main() {
 
         // Renderizar el Sol
         let sun_translation = Vec3::new(window_width as f32 / 2.0, window_height as f32 / 2.0, 0.0);
-        let sun_scale = 25.0;
+        let sun_scale = 40.0;
         let sun_rotation = Vec3::new(0.0, 0.0, time as f32 * 0.5);
         let sun_model_matrix = create_model_matrix(sun_translation, sun_scale, sun_rotation);
 
         let mut sun_uniforms = create_uniforms();
         sun_uniforms.model_matrix = sun_model_matrix;
         sun_uniforms.view_matrix = view_matrix;
+        sun_uniforms.time = time;
 
         render(
             &mut framebuffer,
@@ -301,6 +303,7 @@ fn main() {
             let mut planet_uniforms = create_uniforms();
             planet_uniforms.model_matrix = planet_model_matrix;
             planet_uniforms.view_matrix = view_matrix;
+            planet_uniforms.time = time;
 
             render(
                 &mut framebuffer,
@@ -308,6 +311,65 @@ fn main() {
                 &planet_vertex_array,
                 planet.shader,
             );
+
+            // Si el planeta tiene anillos
+            if planet.name == "GAS_GIANT_WITH_RINGS" {
+                // Configurar los anillos
+                let ring_scale = planet.scale * 2.5;
+                let ring_model_matrix = create_model_matrix(
+                    planet_translation,
+                    ring_scale,
+                    planet_rotation, 
+                );
+            
+                let mut ring_uniforms = create_uniforms();
+                ring_uniforms.model_matrix = ring_model_matrix;
+                ring_uniforms.view_matrix = view_matrix;
+                ring_uniforms.time = time;
+            
+                // Renderizar los anillos
+                render(
+                    &mut framebuffer,
+                    &ring_uniforms,
+                    &ring_vertex_array, 
+                    "ring",      
+                );
+            }
+
+            // Si el planeta tiene luna
+            if planet.name == "ROCKY_PLANET_WITH_MOON" {
+                let moon_orbit_radius = 30.0;
+                let moon_scale = planet.scale * 0.8;
+                let moon_orbit_speed = 2.0;
+                let moon_angle = time as f32 * moon_orbit_speed;
+
+                let moon_translation = Vec3::new(
+                    planet_translation.x + moon_orbit_radius * moon_angle.cos(),
+                    planet_translation.y + moon_orbit_radius * moon_angle.sin(),
+                    0.0,
+                );
+
+                // Rotación de la luna
+                let moon_rotation = Vec3::new(0.0, time as f32 * 0.2, 0.0);
+
+                let moon_model_matrix = create_model_matrix(
+                    moon_translation,
+                    moon_scale,
+                    moon_rotation,
+                );
+
+                let mut moon_uniforms = create_uniforms();
+                moon_uniforms.model_matrix = moon_model_matrix;
+                moon_uniforms.view_matrix = view_matrix;
+                moon_uniforms.time = time;
+
+                render(
+                    &mut framebuffer,
+                    &moon_uniforms,
+                    &planet_vertex_array,
+                    "moon_shader",
+                );
+            }
         }
 
         window
