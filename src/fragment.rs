@@ -83,7 +83,7 @@ fn gas_giant_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let zoom = 3.0;
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
-    let time = uniforms.time as f32 * 0.04;
+    let time = uniforms.time as f32 * 0.008;
 
     // Crear un patrón basado en ondas para un efecto gaseoso dinámico
     let pattern1 = ((x * zoom + time).sin() * (y * zoom + time).cos()).abs();
