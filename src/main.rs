@@ -12,6 +12,7 @@ mod fragment;
 mod shaders;
 mod experimental_shaders;
 mod camera;
+mod skybox;
 
 use framebuffer::Framebuffer;
 use vertex::Vertex;
@@ -19,6 +20,8 @@ use obj::Obj;
 use triangle::triangle;
 use shaders::vertex_shader;
 use fastnoise_lite::{FastNoiseLite, NoiseType, CellularDistanceFunction};
+use nalgebra_glm as glm;
+use skybox::Skybox;
 use crate::fragment::{fragment_shader, Fragment, ring_shader};
 use crate::color::Color;
 use crate::camera::Camera;
@@ -31,7 +34,7 @@ pub struct Uniforms {
     viewport_matrix: Mat4,
     time: u32,
     noise_open_simplex: FastNoiseLite,
-    noise_cellular: FastNoiseLite, 
+    noise_cellular: FastNoiseLite,
 }
 
 pub struct Moon {
@@ -64,46 +67,50 @@ fn create_uniforms() -> Uniforms {
         viewport_matrix: Mat4::identity(),
         time: 0,
         noise_open_simplex,
-        noise_cellular,
+        noise_cellular
     }
 }
 
+fn create_open_simplex_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(1337);
+    noise.set_noise_type(Some(NoiseType::OpenSimplex2));
+    noise
+}
+
+fn create_cellular_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(1337);
+    noise.set_noise_type(Some(NoiseType::Cellular));
+    noise
+}
+
 fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {
-    let (sin_x, cos_x) = rotation.x.sin_cos();
-    let (sin_y, cos_y) = rotation.y.sin_cos();
-    let (sin_z, cos_z) = rotation.z.sin_cos();
-
-    let rotation_matrix_x = Mat4::new(
-        1.0,  0.0,    0.0,   0.0,
-        0.0,  cos_x, -sin_x, 0.0,
-        0.0,  sin_x,  cos_x, 0.0,
-        0.0,  0.0,    0.0,   1.0,
-    );
-
-    let rotation_matrix_y = Mat4::new(
-        cos_y,  0.0,  sin_y, 0.0,
-        0.0,    1.0,  0.0,   0.0,
-        -sin_y, 0.0,  cos_y, 0.0,
-        0.0,    0.0,  0.0,   1.0,
-    );
-
-    let rotation_matrix_z = Mat4::new(
-        cos_z, -sin_z, 0.0, 0.0,
-        sin_z,  cos_z, 0.0, 0.0,
-        0.0,    0.0,  1.0, 0.0,
-        0.0,    0.0,  0.0, 1.0,
-    );
+    let rotation_matrix_x = nalgebra_glm::rotation(rotation.x, &Vec3::x_axis());
+    let rotation_matrix_y = nalgebra_glm::rotation(rotation.y, &Vec3::y_axis());
+    let rotation_matrix_z = nalgebra_glm::rotation(rotation.z, &Vec3::z_axis());
 
     let rotation_matrix = rotation_matrix_z * rotation_matrix_y * rotation_matrix_x;
 
-    let transform_matrix = Mat4::new(
-        scale, 0.0,   0.0,   translation.x,
-        0.0,   scale, 0.0,   translation.y,
-        0.0,   0.0,   scale, translation.z,
-        0.0,   0.0,   0.0,   1.0,
-    );
+    let scaling_matrix = nalgebra_glm::scaling(&Vec3::new(scale, scale, scale));
+    let translation_matrix = nalgebra_glm::translation(&translation);
 
-    transform_matrix * rotation_matrix
+    let model_matrix = translation_matrix * rotation_matrix * scaling_matrix;
+
+    model_matrix
+}
+
+fn create_view_matrix(translation: Vec3, rotation: Vec3, scale: f32) -> Mat4 {
+    let translation_matrix = nalgebra_glm::translation(&-translation);
+    let scaling_matrix = nalgebra_glm::scaling(&Vec3::new(1.0 / scale, 1.0 / scale, 1.0 / scale));
+
+    let rotation_matrix_x = nalgebra_glm::rotation(-rotation.x, &Vec3::x_axis());
+    let rotation_matrix_y = nalgebra_glm::rotation(-rotation.y, &Vec3::y_axis());
+    let rotation_matrix_z = nalgebra_glm::rotation(-rotation.z, &Vec3::z_axis());
+
+    let rotation_matrix = rotation_matrix_z * rotation_matrix_y * rotation_matrix_x;
+
+    let view_matrix = scaling_matrix * rotation_matrix * translation_matrix;
+
+    view_matrix
 }
 
 fn define_planets() -> Vec<Planet> {
@@ -204,18 +211,6 @@ fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Ve
     
 }
 
-fn create_open_simplex_noise() -> FastNoiseLite {
-    let mut noise = FastNoiseLite::with_seed(1337);
-    noise.set_noise_type(Some(NoiseType::OpenSimplex2));
-    noise
-}
-
-fn create_cellular_noise() -> FastNoiseLite {
-    let mut noise = FastNoiseLite::with_seed(1337);
-    noise.set_noise_type(Some(NoiseType::Cellular));
-    noise
-}
-
 fn main() {
     let window_width = 800;
     let window_height = 600;
@@ -235,7 +230,8 @@ fn main() {
     window.set_position(500, 500);
     window.update();
 
-    framebuffer.set_background_color(0x333355);
+    //framebuffer.set_background_color(0x000000);
+    let skybox = Skybox::new(5000);
 
     let planets = define_planets();
     let mut camera = Camera::new();
@@ -258,13 +254,34 @@ fn main() {
         rotation: Vec3::new(0.0, 0.0, 0.0),
     };
 
+    let skybox_uniforms = Uniforms {
+        model_matrix: Mat4::identity(),
+        view_matrix: Mat4::identity(),
+        projection_matrix: glm::perspective(
+            framebuffer_width as f32 / framebuffer_height as f32,
+            45.0_f32.to_radians(),
+            0.1,
+            2000.0,
+        ),        
+        viewport_matrix: nalgebra_glm::scaling(&Vec3::new(
+            framebuffer_width as f32 / 2.0,
+            framebuffer_height as f32 / 2.0,
+            1.0,
+        )),
+        time,
+        noise_open_simplex: create_open_simplex_noise(),
+        noise_cellular: create_cellular_noise()
+    };
+
     while window.is_open() && !window.is_key_down(Key::Escape) {
         handle_camera_input(&mut camera, &window);
         time += 1;
 
-        let view_matrix = camera.view_matrix();
+        framebuffer.clear();       
 
-        framebuffer.clear();
+        skybox.render(&mut framebuffer, &skybox_uniforms, camera_translation);
+
+        let view_matrix = camera.view_matrix();
 
         // Renderizar el Sol
         let sun_translation = Vec3::new(window_width as f32 / 2.0, window_height as f32 / 2.0, 0.0);
@@ -312,8 +329,8 @@ fn main() {
             draw_circle(
                 &mut framebuffer,
                 Vec3::new(
-                    (window_width as f32 / 2.0),
-                    (window_height as f32 / 2.0),
+                    window_width as f32 / 2.0,
+                    window_height as f32 / 2.0,
                     0.0,
                 ),
                 planet.orbit_radius,

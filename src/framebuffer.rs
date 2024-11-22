@@ -1,6 +1,3 @@
-use crate::fragment::{Fragment, fragment_shader};
-use crate::Uniforms;
-
 pub struct Framebuffer {
     pub width: usize,
     pub height: usize,
@@ -41,14 +38,17 @@ impl Framebuffer {
         }
     }
 
+    /*
     pub fn set_background_color(&mut self, color: u32) {
         self.background_color = color;
     }
+    */
 
     pub fn set_current_color(&mut self, color: u32) {
         self.current_color = color;
     }
 
+    /*
     pub fn process_fragments(&mut self, fragments: &[Fragment], uniforms: &Uniforms) {
         for fragment in fragments {
             let x = fragment.position.x as usize;
@@ -64,4 +64,5 @@ impl Framebuffer {
             }
         }
     }
+    */
 }
