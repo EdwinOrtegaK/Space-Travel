@@ -317,6 +317,37 @@ fn moon_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     color_final * fragment.intensity
 }
 
+fn starship_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
+    let zoom = 50.0;
+    let x = fragment.vertex_position.x;
+    let y = fragment.vertex_position.y;
+    let time = uniforms.time as f32 * 0.1;
+
+    let metallic_pattern = uniforms.noise_open_simplex
+        .get_noise_2d(x * zoom + time, y * zoom - time)
+        .abs();
+
+    let base_color = Color::new(120, 120, 160);
+    let highlight_color = Color::new(255, 255, 255);
+
+    let blended_color = base_color.lerp(&highlight_color, metallic_pattern * 0.5);
+
+    let ambient_color = Color::new(50, 50, 80);
+
+    let light_direction = Vec3::new(0.0, 1.0, -1.0).normalize();
+    let normal = fragment.normal.normalize();
+    let specular_intensity = ((normal.dot(&light_direction)).max(0.0).powf(16.0) * 0.8)
+        .clamp(0.0, 1.0);
+    let specular_color = Color::new(255, 255, 255) * specular_intensity;
+
+    let final_color = blended_color
+        .blend_add(&ambient_color) 
+        .blend_add(&specular_color) 
+        * fragment.intensity;
+
+    final_color
+}
+
 pub fn fragment_shader(fragment: &Fragment, uniforms: &Uniforms, shader_type: &str) -> Color {
     match shader_type {
         "solar_surface" => solar_shader(fragment, uniforms),
@@ -329,6 +360,7 @@ pub fn fragment_shader(fragment: &Fragment, uniforms: &Uniforms, shader_type: &s
         "dark_red" => dark_red_planet_shader(fragment, uniforms),
         "rocky_planet_with_moon_shader" => rocky_planet_with_moon_shader(fragment, uniforms),
         "moon_shader" => moon_shader(fragment, uniforms),
+        "starship_shader" => starship_shader(fragment, uniforms),
         _ => Color::new(0, 0, 0),
     }
 }

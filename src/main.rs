@@ -240,7 +240,10 @@ fn main() {
     let planet_vertex_array = planet_obj.get_vertex_array();
 
     let ring_obj = Obj::load("assets/rings.obj").expect("Failed to load rings.obj");
-    let ring_vertex_array = ring_obj.get_vertex_array(); 
+    let ring_vertex_array = ring_obj.get_vertex_array();
+    
+    let starship_obj = Obj::load("assets/ZyronStarship.obj").expect("Failed to load starship.obj");
+    let starship_vertex_array = starship_obj.get_vertex_array();
 
     let mut time = 0;
 
@@ -271,6 +274,29 @@ fn main() {
         time,
         noise_open_simplex: create_open_simplex_noise(),
         noise_cellular: create_cellular_noise()
+    };
+    
+    let starship_offset = Vec3::new(0.0, -50.0, -200.0);
+
+    let starship_translation = Vec3::new(
+        window_width as f32 / 2.0,
+        window_height as f32 / 2.0 + 100.0, 
+        0.0,
+    );
+
+    let starship_model_matrix = create_model_matrix(starship_translation, 10.0, Vec3::zeros());
+
+    let starship_rotation = Vec3::new(0.2, 0.0, 0.0); 
+    let starship_scale = 15.0; 
+
+    let starship_uniforms = Uniforms {
+        model_matrix: starship_model_matrix,
+        view_matrix: camera.view_matrix(),
+        projection_matrix: Mat4::identity(),
+        viewport_matrix: Mat4::identity(),
+        time,
+        noise_cellular: create_cellular_noise(),
+        noise_open_simplex: create_open_simplex_noise(),
     };
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
@@ -406,6 +432,25 @@ fn main() {
                 );
             }
         }
+
+        // Renderizar la nave
+        let starship_model_matrix = create_model_matrix(
+            starship_translation,
+            starship_scale, 
+            starship_rotation
+        );
+
+        let mut starship_uniforms = create_uniforms();
+        starship_uniforms.model_matrix = starship_model_matrix;
+        starship_uniforms.view_matrix = camera.view_matrix();
+        starship_uniforms.time = time;
+
+        render(
+            &mut framebuffer,
+            &starship_uniforms,
+            &starship_vertex_array,
+            "starship_shader",
+        );
 
         window
             .update_with_buffer(&framebuffer.buffer, framebuffer_width, framebuffer_height)
