@@ -30,7 +30,7 @@ pub fn line(a: &Vertex, b: &Vertex) -> Vec<Fragment> {
         let z = start.z + (end.z - start.z) * (x0 - start.x as i32) as f32 / (end.x - start.x) as f32;
         
         fragments.push(Fragment::new(
-            Vec2::new(x0 as f32, y0 as f32),
+            Vec3::new(x0 as f32, y0 as f32, 0.0),
             Color::new(255, 255, 255),
             z,
             normal_vector,

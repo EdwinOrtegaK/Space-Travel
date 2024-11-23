@@ -4,7 +4,7 @@ use crate::Uniforms;
 use fastnoise_lite::FastNoiseLite;
 
 pub struct Fragment {
-    pub position: Vec2,
+    pub position: Vec3,
     pub color: Color,
     pub depth: f32,
     pub normal: Vec3,
@@ -13,7 +13,7 @@ pub struct Fragment {
 }
 
 impl Fragment {
-    pub fn new(position: Vec2, color: Color, depth: f32, normal: Vec3, intensity: f32, vertex_position: Vec3) -> Self {
+    pub fn new(position: Vec3, color: Color, depth: f32, normal: Vec3, intensity: f32, vertex_position: Vec3) -> Self {
         Fragment {
             position,
             color,

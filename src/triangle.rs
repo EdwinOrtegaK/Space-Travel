@@ -29,29 +29,34 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
       for x in min_x..=max_x {
         let point = Vec3::new(x as f32 + 0.5, y as f32 + 0.5, 0.0);
   
-        // coordenadas
+        // Coordenadas baricéntricas
         let (w1, w2, w3) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
+
         //verificación del punto
-        if w1 >= 0.0 && w1 <= 1.0 && 
+        if w1 >= 0.0 && w1 <= 1.0 &&
            w2 >= 0.0 && w2 <= 1.0 &&
-           w3 >= 0.0 && w3 <= 1.0 { 
-            let normal = v1.transformed_normal * w1 + v2.transformed_normal * w2 + v3.transformed_normal * w3;
+           w3 >= 0.0 && w3 <= 1.0 {
+            let normal = v1.transformed_normal * w1 +
+                         v2.transformed_normal * w2 +
+                         v3.transformed_normal * w3;
             let normal = normal.normalize();
+
             let intensity = dot(&normal, &light_dir).max(0.0);
 
-            let base_color = Color::new(153, 101, 21); // gris
-            let depth = a.z * w1 + b.z * w2 + c.z * w3;
+            let base_color = Color::new(153, 101, 21);
+
+            let depth = w1 * a.z + w2 * b.z + w3 * c.z;
 
             let vertex_position = v1.position * w1 + v2.position * w2 + v3.position * w3;
 
             fragments.push(Fragment::new(
-              Vec2::new(x as f32, y as f32),
-              base_color,
-              depth,
-              normal,
-              intensity,
-              vertex_position
-          ));
+                Vec3::new(x as f32, y as f32, 0.0),
+                base_color,
+                depth,      
+                normal,
+                intensity,
+                vertex_position,
+            ));
         }
       }
     }

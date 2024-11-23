@@ -1,3 +1,6 @@
+use crate::fragment::{Fragment, fragment_shader};
+use crate::Uniforms;
+
 pub struct Framebuffer {
     pub width: usize,
     pub height: usize,
@@ -34,7 +37,7 @@ impl Framebuffer {
             if self.zbuffer[index] > depth {
                 self.buffer[index] = self.current_color;
                 self.zbuffer[index] = depth;
-            }
+            }            
         }
     }
 
@@ -48,21 +51,21 @@ impl Framebuffer {
         self.current_color = color;
     }
 
-    /*
     pub fn process_fragments(&mut self, fragments: &[Fragment], uniforms: &Uniforms) {
         for fragment in fragments {
             let x = fragment.position.x as usize;
             let y = fragment.position.y as usize;
             if x < self.width && y < self.height {
+                let depth = fragment.position.z;
+
                 // Llamada al fragment shader para calcular el color ajustado
                 let shaded_color = fragment_shader(&fragment, uniforms, "static_pattern");
                 let color = shaded_color.to_hex();
                 
                 // Configura el color actual del framebuffer y dibuja el punto
                 self.set_current_color(color);
-                self.point(x, y, fragment.depth);
+                self.point(x, y, depth);
             }
         }
     }
-    */
 }

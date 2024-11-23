@@ -113,6 +113,18 @@ fn create_view_matrix(translation: Vec3, rotation: Vec3, scale: f32) -> Mat4 {
     view_matrix
 }
 
+fn update_starship_position_relative_to_camera(
+    camera_translation: Vec3, 
+    camera_rotation: Vec3, 
+    starship_offset: Vec3,
+) -> (Vec3, Vec3) {
+    let starship_translation = camera_translation + starship_offset;
+
+    let starship_rotation = camera_rotation;
+
+    (starship_translation, starship_rotation)
+}
+
 fn define_planets() -> Vec<Planet> {
     vec![
         Planet {
@@ -275,29 +287,6 @@ fn main() {
         noise_open_simplex: create_open_simplex_noise(),
         noise_cellular: create_cellular_noise()
     };
-    
-    let starship_offset = Vec3::new(0.0, -50.0, -200.0);
-
-    let starship_translation = Vec3::new(
-        window_width as f32 / 2.0,
-        window_height as f32 / 2.0 + 100.0, 
-        0.0,
-    );
-
-    let starship_model_matrix = create_model_matrix(starship_translation, 10.0, Vec3::zeros());
-
-    let starship_rotation = Vec3::new(0.2, 0.0, 0.0); 
-    let starship_scale = 15.0; 
-
-    let starship_uniforms = Uniforms {
-        model_matrix: starship_model_matrix,
-        view_matrix: camera.view_matrix(),
-        projection_matrix: Mat4::identity(),
-        viewport_matrix: Mat4::identity(),
-        time,
-        noise_cellular: create_cellular_noise(),
-        noise_open_simplex: create_open_simplex_noise(),
-    };
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         handle_camera_input(&mut camera, &window);
@@ -310,7 +299,11 @@ fn main() {
         let view_matrix = camera.view_matrix();
 
         // Renderizar el Sol
-        let sun_translation = Vec3::new(window_width as f32 / 2.0, window_height as f32 / 2.0, 0.0);
+        let sun_translation = Vec3::new(
+            window_width as f32 / 2.0, 
+            window_height as f32 / 2.0, 
+            0.0
+        );
         let sun_scale = 40.0;
         let sun_rotation = Vec3::new(0.0, 0.0, time as f32 * 0.5);
         let sun_model_matrix = create_model_matrix(sun_translation, sun_scale, sun_rotation);
@@ -434,16 +427,25 @@ fn main() {
         }
 
         // Renderizar la nave
-        let starship_model_matrix = create_model_matrix(
-            starship_translation,
-            starship_scale, 
-            starship_rotation
+        let starship_translation = Vec3::new(
+            window_width as f32 / 2.0,
+            window_height as f32 / 2.0, 
+            -100.0,
         );
-
-        let mut starship_uniforms = create_uniforms();
-        starship_uniforms.model_matrix = starship_model_matrix;
-        starship_uniforms.view_matrix = camera.view_matrix();
-        starship_uniforms.time = time;
+        let starship_scale = 30.0;
+        let starship_rotation = Vec3::new(0.0, -1.5, 3.1); 
+    
+        let starship_model_matrix = create_model_matrix(starship_translation, starship_scale, starship_rotation);
+    
+        let starship_uniforms = Uniforms {
+            model_matrix: starship_model_matrix,
+            view_matrix: Mat4::identity(), 
+            projection_matrix: Mat4::identity(), 
+            viewport_matrix: Mat4::identity(),
+            time,
+            noise_open_simplex: create_open_simplex_noise(),
+            noise_cellular: create_cellular_noise(),
+        };
 
         render(
             &mut framebuffer,
@@ -476,7 +478,7 @@ fn render_rings(framebuffer: &mut Framebuffer, uniforms: &Uniforms, position: Ve
                 let rotated_z = zf;
 
                 let fragment = Fragment::new(
-                    Vec2::new(rotated_x, rotated_y),
+                    Vec3::new(rotated_x, rotated_y, 0.0),
                     Color::new(200, 200, 200),
                     1.0,
                     Vec3::new(0.0, 1.0, 0.0),
@@ -498,12 +500,27 @@ fn render_rings(framebuffer: &mut Framebuffer, uniforms: &Uniforms, position: Ve
     }
 }
 
+fn render_starship(
+    framebuffer: &mut Framebuffer,
+    starship_translation: Vec3,
+    starship_rotation: Vec3,
+    starship_scale: f32,
+    starship_vertex_array: &[Vertex],
+    view_matrix: Mat4,
+    time: u32,
+) {
+    let starship_model_matrix = create_model_matrix(starship_translation, starship_scale, starship_rotation);
 
+    let mut starship_uniforms = create_uniforms();
+    starship_uniforms.model_matrix = create_model_matrix(starship_translation, starship_scale, starship_rotation);
+    starship_uniforms.view_matrix = view_matrix;
+    starship_uniforms.time = time;    
+}
 
 fn handle_camera_input(camera: &mut Camera, window: &Window) {
-    let move_speed = 15.0; 
+    let move_speed = 10.0; 
     let rotation_speed = 0.02; 
-    let zoom_speed = 0.02; 
+    let zoom_speed = 0.01; 
 
     // Movimiento de cámara
     if window.is_key_down(Key::Left) {
