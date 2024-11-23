@@ -48,11 +48,11 @@ Una vez dentro del programa, puedes interactuar con los planetas utilizando los 
 - **Zoom**
   - Q: Acercar (Zoom in).
   - E: Alejar (Zoom out).
-- **Rotación del planeta**
-  - A: Rotar la nave a la izquierda (eje Y).
-  - D: Rotar la nave a la derecha (eje Y).
-  - W: Rotar la nave hacia arriba (eje X).
-  - S: Rotar la nave hacia abajo (eje X).
+- **Rotación**
+  - A: Rotar a la izquierda (eje Y).
+  - D: Rotar a la derecha (eje Y).
+  - W: Rotar hacia arriba (eje X).
+  - S: Rotar hacia abajo (eje X).
 - **Salir**
   - Escape: Cierra la aplicación.
 
