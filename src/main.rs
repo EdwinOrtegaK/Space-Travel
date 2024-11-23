@@ -350,11 +350,11 @@ fn main() {
             if planet.name == "GAS_GIANT_WITH_RINGS" {
                 // Configurar los anillos
                 let ring_scale = planet.scale * 2.5;
-                let ring_model_matrix = create_model_matrix(
-                    planet_translation,
-                    ring_scale,
-                    planet_rotation, 
-                );
+            
+                // Inclinar los anillos
+                let rotation_inclination = nalgebra_glm::rotation(45.0_f32.to_radians(), &Vec3::x_axis());
+                let ring_model_matrix = create_model_matrix(planet_translation, ring_scale, planet_rotation)
+                    * rotation_inclination;
             
                 let mut ring_uniforms = create_uniforms();
                 ring_uniforms.model_matrix = ring_model_matrix;
@@ -365,16 +365,16 @@ fn main() {
                 render(
                     &mut framebuffer,
                     &ring_uniforms,
-                    &ring_vertex_array, 
-                    "ring",      
+                    &ring_vertex_array,
+                    "ring",
                 );
-            }
+            }                      
 
             // Si el planeta tiene luna
             if planet.name == "ROCKY_PLANET_WITH_MOON" {
                 let moon_orbit_radius = 30.0;
                 let moon_scale = planet.scale * 0.8;
-                let moon_orbit_speed = 0.01;
+                let moon_orbit_speed = 0.02;
                 let moon_angle = time as f32 * moon_orbit_speed;
 
                 let moon_translation = Vec3::new(
@@ -415,42 +415,48 @@ fn main() {
     }
 }
 
-fn render_rings(framebuffer: &mut Framebuffer, uniforms: &Uniforms) {
+fn render_rings(framebuffer: &mut Framebuffer, uniforms: &Uniforms, position: Vec3) {
     let ring_inner_radius = 1.2;
     let ring_outer_radius = 1.8;
 
     for x in -400..400 {
-        for y in -400..400 {
+        for z in -400..400 {
             let xf = x as f32 / 100.0;
-            let yf = y as f32 / 100.0;
-            let distance = (xf.powi(2) + yf.powi(2)).sqrt();
+            let zf = z as f32 / 100.0;
+            let distance = (xf.powi(2) + zf.powi(2)).sqrt();
 
             if distance > ring_inner_radius && distance < ring_outer_radius {
+                let rotated_x = xf;
+                let rotated_y = 0.0;
+                let rotated_z = zf;
+
                 let fragment = Fragment::new(
-                    Vec2::new(xf, yf),
-                    Color::new(0, 0, 0),
+                    Vec2::new(rotated_x, rotated_y),
+                    Color::new(200, 200, 200),
                     1.0,
-                    Vec3::new(0.0, 0.0, 1.0),
+                    Vec3::new(0.0, 1.0, 0.0),
                     1.0,
-                    Vec3::new(xf, yf, 0.0),
+                    position + Vec3::new(rotated_x, rotated_y, rotated_z),
                 );
 
                 let ring_color = ring_shader(&fragment, uniforms);
-                
-                let x_screen = (xf * 100.0 + framebuffer.width as f32 / 2.0) as usize;
-                let y_screen = (yf * 100.0 + framebuffer.height as f32 / 2.0) as usize;
-                
-                if x_screen < framebuffer.width && y_screen < framebuffer.height {
+
+                let x_screen = (rotated_x * 100.0 + framebuffer.width as f32 / 2.0) as usize;
+                let z_screen = (rotated_z * 100.0 + framebuffer.height as f32 / 2.0) as usize;
+
+                if x_screen < framebuffer.width && z_screen < framebuffer.height {
                     framebuffer.set_current_color(ring_color.to_hex());
-                    framebuffer.point(x_screen, y_screen, 1.0);
+                    framebuffer.point(x_screen, z_screen, 1.0);
                 }
             }
         }
     }
 }
 
+
+
 fn handle_camera_input(camera: &mut Camera, window: &Window) {
-    let move_speed = 5.0; 
+    let move_speed = 15.0; 
     let rotation_speed = 0.02; 
     let zoom_speed = 0.02; 
 
