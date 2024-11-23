@@ -429,7 +429,7 @@ fn main() {
         // Renderizar la nave
         let starship_translation = Vec3::new(
             window_width as f32 / 2.0,
-            window_height as f32 / 2.0, 
+            window_height as f32 / 2.0 + 200.0, 
             -100.0,
         );
         let starship_scale = 30.0;
