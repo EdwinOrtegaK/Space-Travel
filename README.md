@@ -57,5 +57,8 @@ Una vez dentro del programa, puedes interactuar con los planetas utilizando los 
   - Escape: Cierra la aplicación.
 
 ## Video simulación
-Aquí puedes ver el funcionamiento del proyecto. 
+[Aquí](https://youtu.be/F1B6cRi4z-Q) puedes ver el funcionamiento del proyecto.
+
+![image](https://github.com/user-attachments/assets/17e10f10-2872-47c1-88d2-6718fcbdebd3)
+
 
